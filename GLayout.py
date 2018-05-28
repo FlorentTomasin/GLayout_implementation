@@ -33,77 +33,16 @@ layout has a low cost score.
 """
 
 # define condition var
-CONFIG_PLOT_GRAPH = False
+CONFIG_PLOT_GRAPH = True
 
-import random
+# import random
 if CONFIG_PLOT_GRAPH:
-    import matplotlib.pyplot as plt
-
-from math import exp
-import numpy as np
-
-#  grid sizes
-grid_x_min = 0
-grid_x_max = 3
-grid_y_min = 0
-grid_y_max = 3
-
-# number of nodes and edges in the network
-nb_node  = 3
-nb_edges = 2
-
-# Max distance between nodes
-dmax     = 2 
-
-# identity matrix
-identityMatrix = np.eye(grid_x_max)
-
-def draw_matrix(matrix):
-    """
-    Function to plot the matrix in a graph and stdout
-    """
-    print (matrix)
-    if CONFIG_PLOT_GRAPH:
-        plt.matshow(matrix)
-        plt.show()
-
-def initArea(x_min, x_max, y_min, y_max):
-    """
-    Initialise an area of size lenX by len Y
-    """
-    lenX = abs(x_max-x_min)
-    lenY = abs(y_max-y_min)
-    return np.zeros((lenY,lenX))
-
-def initLayout(nb_nodes):
-    """
-    Init the nodes table
-    """
-    Rn = []
-    for i in range(0, nb_nodes):
-        randX = random.randint(grid_x_min, grid_x_max-1)
-        randY = random.randint(grid_y_min, grid_y_max-1)
-        Rn.append([randX, randY])
-    return Rn
-
-def initEdges(R, nb_edges):
-    """
-    Create the adjacency matrix that connect nodes.
-    """
-    adjacencyMatrix = initArea(grid_x_min, grid_x_max, grid_y_min, grid_y_max)
-    for i in range(0, nb_edges):
-        rdEdge = R[random.randint(0, len(R)-1)]
-        adjacencyMatrix[rdEdge[0]][rdEdge[1]] = 1
-    return adjacencyMatrix
-
-def assignNodes(R):
-    """
-    Place the nodes on the map L
-    """
-    L = initArea(grid_x_min, grid_x_max, grid_y_min, grid_y_max)
-    for i in range(0,len(R)):
-        L[R[i][0]][R[i][1]] = 1
-    return L
+    # import matplotlib.pyplot as plt
+    from DrawLib import *
+    
+from gridSetup import *
+# from math import exp
+# import numpy as np
 
 def quantityMatrixK(adjacencyMatrix, k):
     """
@@ -118,7 +57,7 @@ def weightMatrix(adjacencyMatrix):
     """
     Generate the weight matrix from adjacency matrix.
     """
-    w  = initArea(grid_x_min, grid_x_max, grid_y_min, grid_y_max)
+    w  = initArea(grid.x_min, grid.x_max, grid.y_min, grid.y_max)
     M1 = quantityMatrixK(adjacencyMatrix, 1)
     M2 = quantityMatrixK(adjacencyMatrix, 2)
     M3 = quantityMatrixK(adjacencyMatrix, 3)
@@ -183,8 +122,6 @@ def randLocalPoint(L):
 
 # least change operator T αp this operator move a node alpha to a p 
 # free local point in the L area.
-Tap = 0.5 # least change operator defined as a transposition matrix but 
-          # will be defined as a function
 def transpositionMatrix(R, alpha, p):
     """
     Transposition function used instead of generatng transposition Matrix.
@@ -213,38 +150,38 @@ def localMin0(R, L, w):
             return fmin
         R = transpositionMatrix(R, alpha, q)
 
-def localMin(R):
-    """
-    TODO: complete the code
-    """
-    fo   = costFunction(R)
-    Dmin = 0
-    for k in R: # and p in L (where p is a vacant point in L)
-        Dap = Fa(Tap* R) - Fa(R)
-        if Dap < Dmin:
-                Dmin = Dap
-                B    = A
-                q    = p
+# def localMin(R):
+#     """
+#     TODO: complete the code
+#     """
+#     fo   = costFunction(R)
+#     Dmin = 0
+#     for k in R: # and p in L (where p is a vacant point in L)
+#         Dap = Fa(Tap* R) - Fa(R)
+#         if Dap < Dmin:
+#                 Dmin = Dap
+#                 B    = A
+#                 q    = p
         
-    while Dmin < 0:
-        Dminn = 0
-        for A in R: # A != B and p in L, p != q
-            Dapn = Deltaap(Tbp * R)
-            if Dapn < Dminn:
-                Dminn = Dapn
-                Bn = A
-                qn = p
+#     while Dmin < 0:
+#         Dminn = 0
+#         for A in R: # A != B and p in L, p != q
+#             Dapn = Deltaap(Tbp * R)
+#             if Dapn < Dminn:
+#                 Dminn = Dapn
+#                 Bn = A
+#                 qn = p
                                 
-            R = Tbp * R
-            Dbrb = - Dmin
-        for A in R: # A != B and p in L, p != q
-            Dbp = Dbpn
+#             R = Tbp * R
+#             Dbrb = - Dmin
+#         for A in R: # A != B and p in L, p != q
+#             Dbp = Dbpn
             
-        B = Bn
-        q = qn
-        Dmin = Dminn
+#         B = Bn
+#         q = qn
+#         Dmin = Dminn
         
-    return fo + Dminn
+#     return fo + Dminn
 
 def neighbor(R, L, p):
     """
@@ -299,44 +236,3 @@ def gridLayout(Tmax, Tmin, ne, rc, p):
             draw_matrix(L)
         T = rc * T
     return Rmin, fmin
-    
-####################################
-# Main script
-####################################
-if __name__ == '__main__':
-    # perturbation rate
-    p = 0.2
-    
-    #~ R = initLayout(nb_node)
-    #~ print("R: nodes list")
-    #~ draw_matrix(R)
-    
-    #~ L = assignNodes(R)
-    #~ print("L: area network")
-    #~ draw_matrix(L)
-
-    #~ print("Random local point in L")
-    #~ print(randLocalPoint(L))
-    
-    #~ adjacencyMatrix = initEdges(R, nb_edges)
-    #~ print("A: edges matrix")
-    #~ draw_matrix(adjacencyMatrix)
-
-    #~ M = quantityMatrixK(adjacencyMatrix,2)
-    #~ print("M: quatity matrix")
-    #~ draw_matrix(M)
-
-    #~ w = weightMatrix(adjacencyMatrix)
-    #~ print("w: weight matrix")
-    #~ draw_matrix(w)
-
-    #~ print("Cost between nodes")
-    #~ print (costBetweenNode(R, 1, 2, w))
-    
-    #~ print("Costfunction")
-    #~ print (costFunction(R, w))
-
-    #~ print("Neighbor allocation")
-    #~ print (neighbor(R, L, p))
-    
-    print (gridLayout(1,0,10,0.7,0))

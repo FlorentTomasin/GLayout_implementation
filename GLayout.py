@@ -39,7 +39,7 @@ CONFIG_PLOT_GRAPH = True
 if CONFIG_PLOT_GRAPH:
     # import matplotlib.pyplot as plt
     from DrawLib import *
-    
+
 from gridSetup import *
 # from math import exp
 # import numpy as np
@@ -220,6 +220,10 @@ def gridLayout(Tmax, Tmin, ne, rc, p):
     Rmin = R
 
     while (T > Tmin):
+
+        if CONFIG_PLOT_GRAPH:
+            draw_matrix(R, adjacencyMatrix, grid)
+
         for i in range(0, ne):
             Rn   = neighbor(R, L, p)
             fn   = localMin0(Rn, L,  w)
@@ -233,6 +237,5 @@ def gridLayout(Tmax, Tmin, ne, rc, p):
                     fmin = f
                     Rmin = R
             L = assignNodes(R)
-            draw_matrix(L)
         T = rc * T
     return Rmin, fmin

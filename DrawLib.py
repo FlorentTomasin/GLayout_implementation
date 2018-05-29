@@ -11,7 +11,7 @@ class GLPlotWidget(QGLWidget):
     # default window size
     width, height = 600, 600
 
-    def set_data(self, nodes, edges, config):
+    def setData(self, nodes, edges, config):
         """
         Load 2D data as a Nx2 Numpy array.
         """
@@ -69,7 +69,7 @@ class GLPlotWidget(QGLWidget):
         Draw filled circle
         """
         i = 0
-        triangleAmount = 20 # of triangles used to draw circle
+        triangleAmount = 20 # nb of triangles used to draw circle
         twicePi = 2.0 * pi
         
         gl.glBegin(gl.GL_TRIANGLE_FAN)
@@ -112,7 +112,6 @@ class GLPlotWidget(QGLWidget):
         gl.glMatrixMode(gl.GL_PROJECTION)
         gl.glLoadIdentity()
         # the window corner OpenGL coordinates are (-+1, -+1)
-        # gl.glOrtho(-1, 1, 1, -1, -1, 1)
         gl.glOrtho(self.config.x_min, self.config.x_max-1, self.config.y_min, self.config.y_max-1, -1, 1)
 
 # define a Qt window with an OpenGL widget inside it
@@ -123,7 +122,7 @@ class TestWindow(QtWidgets.QMainWindow):
         print (edges)
         # initialize the GL widget
         self.widget = GLPlotWidget()
-        self.widget.set_data(nodes, edges, config)
+        self.widget.setData(nodes, edges, config)
         # put the window at the screen position (100, 100)
         self.setGeometry(100, 100, self.widget.width, self.widget.height)
         self.setCentralWidget(self.widget)

@@ -37,7 +37,7 @@ if __name__ == '__main__':
     #~ print("Neighbor allocation")
     #~ print (neighbor(R, L, p))
     
-    # print (gridLayout(1,0,10,0.7,0))
+    print (gridLayout(1,0,10,0.7,0))
 	
     if CONFIG_PLOT_GRAPH:
 	    draw_matrix(R, adjacencyMatrix, grid)

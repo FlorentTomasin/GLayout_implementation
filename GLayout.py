@@ -24,57 +24,71 @@ layout has a low cost score.
         Layout of a network is defined by the cost function:
                 costFunction(R, i, j): sum cost betwen all pairs of 
                 the node.
-                costBetweenNode(R, i, j): wij * d(ri, rj)
+                costBetweenNodes(R, i, j): wij * d(ri, rj)
                     wij is the cost weight between nodes ij
                     d the distance between nodes ij
                     d(ri, rj) = | xi - xj | + | yi - yj |
 
-@author: Florent Tomasin <florenttomasn@orange.fr>
+@author: Florent Tomasin <florenttomasin@orange.fr>
 """
 
-# define condition var
-CONFIG_PLOT_GRAPH = True
-
-# import random
-if CONFIG_PLOT_GRAPH:
-    # import matplotlib.pyplot as plt
-    from DrawLib import *
-
 from gridSetup import *
-# from math import exp
-# import numpy as np
 
-def quantityMatrixK(adjacencyMatrix, k):
+#################################################################
+# Object functions
+#################################################################
+
+def areaUpdateL(R):
+    """
+    Init the nodes table
+    """
+    L = np.zeros((GRIDSIZE,GRIDSIZE))
+    for i in range(0, len(R)):
+        L[R[i][0]][R[i][1]] = 1
+    return L
+
+def adjacencyMatrix(R, edges):
+    """
+    Create the adjacency matrix wich is the representation of the layout topology.
+    """
+    A = np.zeros((len(R),len(R)))
+    for i in range(0, len(edges)):
+        A[edges[i][0]][edges[i][1]] = 1
+    return A
+
+def numberOfPathMatrix(vadjacencyMatrix):
+    return vadjacencyMatrix + np.eye(len(vadjacencyMatrix))
+
+def numberOfPathMatrixPowK(vnumberOfPathMatrix, k):
     """
     Compute the quantity matrix to power k.
     """
-    M = ( adjacencyMatrix + identityMatrix)
-    for i in range(1,k):
-        M =  M*M
-    return M
+    return np.linalg.matrix_power(vnumberOfPathMatrix, k)
 
-def weightMatrix(adjacencyMatrix):
+def weightMatrix(R, vnumberOfPathMatrix):
     """
     Generate the weight matrix from adjacency matrix.
     """
-    w  = initArea(grid.x_min, grid.x_max, grid.y_min, grid.y_max)
-    M1 = quantityMatrixK(adjacencyMatrix, 1)
-    M2 = quantityMatrixK(adjacencyMatrix, 2)
-    M3 = quantityMatrixK(adjacencyMatrix, 3)
-    M4 = quantityMatrixK(adjacencyMatrix, 4)
-    for i in range(0, len(w)):
-        for j in range(0, len(w[i])):
+    W  = np.zeros((len(R),len(R)))
+
+    M1 = numberOfPathMatrixPowK(vnumberOfPathMatrix, 1)
+    M2 = numberOfPathMatrixPowK(vnumberOfPathMatrix, 2)
+    M3 = numberOfPathMatrixPowK(vnumberOfPathMatrix, 3)
+    M4 = numberOfPathMatrixPowK(vnumberOfPathMatrix, 4)
+
+    for i in range(0, len(W)):
+        for j in range(0, len(W[i])):
             if M1[i][j] > 0:
-                w[i][j] = 3
+                W[i][j] = 3
             elif (M1[i][j] == 0) and (M2[i][j] > 0):
-                w[i][j] = 1
+                W[i][j] = 1
             elif (M2[i][j] == 0) and (M3[i][j] > 0):
-                w[i][j] = 0
+                W[i][j] = 0
             elif (M3[i][j] == 0) and (M4[i][j] > 0):
-                w[i][j] = -1
+                W[i][j] = -1
             else:
-                w[i][j] = -2
-    return w
+                W[i][j] = -2
+    return W
 
 def distance(ri, rj):
     """
@@ -82,110 +96,71 @@ def distance(ri, rj):
     """
     return abs(ri[0] - rj[0]) + abs(ri[1] - rj[1])
 
-def costBetweenNode(R, i, j, w):
+def costBetweenNodes(R, W, i, j):
     """
     Return the cost between nodes at a specific time
     and following weight matrix. 
     """
-    if w[i][j] >= 0:
-        return w[i][j] * distance(R[i], R[j])
+    if W[i][j] >= 0:
+        return W[i][j] * distance(R[i], R[j])
     else:
-        return w[i][j] * min(distance(R[i], R[j]), dmax)
+        return W[i][j] * min(distance(R[i], R[j]), DMAX)
 
-def costFunction(R, w):
+def costFunction(R, W):
     """
     Return the cost of the network at a specific time.
     """
-    f_r = 0
-    for j in range(0, len(R)):
-        for i in range(0, j):
-            f_r += costBetweenNode(R, i, j, w)
-    return f_r
+    costFunc = 0
+    for i in range(0, len(R)):
+        for j in range(i, len(R)):
+            costFunc += costBetweenNodes(R, W, i, j)
+    return costFunc
 
-def pLocalPoint(L):
+#################################################################
+# tool function
+#################################################################
+
+def printR(R, A):
+    area = np.zeros((GRIDSIZE,GRIDSIZE))
+    for i in range(0, len(R)):
+        area[R[i][0]][R[i][1]] = 1
+    
+    for i in range(0, len(A)):
+        for j in range(0, len(A[i])):
+            if (A[i][j] == 1):
+                area[R[i][0]][R[i][1]] = 2
+                area[R[j][0]][R[j][1]] = 2
+
+    print(area)
+
+#################################################################
+# Algorithm function
+#################################################################
+
+def vacantPoint(L):
     """
-    Function to find all p local points in the L area.
+    Extract all vacant point in L
     """
     pliste = []
     for i in range(0, len(L)):
         for j in range(0, len(L[i])):
             if L[i][j]==0:
-                pliste.append([ i, j])
+                pliste.append([i, j])
     return pliste
 
-def randLocalPoint(L):
+def randVacantPoint(L):
     """
-    Extract a random free local point from L 
+    Extract a random vacant point from the area L 
     """
-    pliste = pLocalPoint(L)
+    pliste = vacantPoint(L)
+
     return pliste[random.randint(0, len(pliste)-1)]
-
-# least change operator T αp this operator move a node alpha to a p 
-# free local point in the L area.
-def transpositionMatrix(R, alpha, p):
-    """
-    Transposition function used instead of generatng transposition Matrix.
-    """
-    Rp       = R[p]
-    R[p]     = R[alpha]
-    R[alpha] = Rp
-    return R
-
-def localMin0(R, L, w):
-    """
-    Function to find the local min in the grid area.
-    """
-    fo = costFunction(R, w)
-    q  = None
-    for k in R:
-        fmin = fo
-        for alpha in range(0, len(R)):
-            for p in range(0, len(L)):
-                ftrial = costFunction(transpositionMatrix(R, alpha, p), w)
-                if ftrial < fmin:
-                    fmin = ftrial
-                    beta = alpha
-                    q = p
-        if fmin >= fo:
-            return fmin
-        R = transpositionMatrix(R, alpha, q)
-
-# def localMin(R):
-#     """
-#     TODO: complete the code
-#     """
-#     fo   = costFunction(R)
-#     Dmin = 0
-#     for k in R: # and p in L (where p is a vacant point in L)
-#         Dap = Fa(Tap* R) - Fa(R)
-#         if Dap < Dmin:
-#                 Dmin = Dap
-#                 B    = A
-#                 q    = p
-        
-#     while Dmin < 0:
-#         Dminn = 0
-#         for A in R: # A != B and p in L, p != q
-#             Dapn = Deltaap(Tbp * R)
-#             if Dapn < Dminn:
-#                 Dminn = Dapn
-#                 Bn = A
-#                 qn = p
-                                
-#             R = Tbp * R
-#             Dbrb = - Dmin
-#         for A in R: # A != B and p in L, p != q
-#             Dbp = Dbpn
-            
-#         B = Bn
-#         q = qn
-#         Dmin = Dminn
-        
-#     return fo + Dminn
 
 def neighbor(R, L, p):
     """
     Function to move a node to a neighbor position
+    p is the probality called perturbation rate.
+    p as to be defined
     """
     Rp = []
     for k in range(0,len(R)):
@@ -193,11 +168,59 @@ def neighbor(R, L, p):
         if (epsilon > p):
             Rp.append(R[k])
         else:
-            Rp.append(randLocalPoint(L))
+            randpoint = randVacantPoint(L)
+            # update L according to the random
+            # vacant point previously found.
+            L[randpoint[0]][randpoint[1]]=1
+            L[R[k][0]][R[k][1]]=0
+
+            Rp.append(randpoint)
     
     return Rp
 
-def gridLayout(Tmax, Tmin, ne, rc, p):
+# least change operator T αp this operator move a node alpha to a p 
+# free local point in the L area.
+def transpositionMatrix(R, vacantL, alpha, p):
+    """
+    Transposition function used instead of generatng transposition Matrix.
+    """
+    Rp = R.copy()
+    Rp[alpha]=vacantL[p].copy()
+
+    return Rp
+
+def localMin0(R, L, W):
+    """
+    Function to find the local min in the grid area.
+    """
+    fo      = costFunction(R, W)
+    vacantL = vacantPoint(L)
+    beta = None
+    q    = None
+
+    while True:
+        fmin = fo
+
+        for alpha in range(0, len(R)):
+            for p in range(0, len(vacantL)):
+                TxpR = transpositionMatrix(R, vacantL, alpha, p)
+                ftrial = costFunction(TxpR, W)
+                if ftrial < fmin:
+                    fmin = ftrial
+                    beta = alpha
+                    q = p
+
+        if (beta != None) and (q != None):
+            TaqR       = transpositionMatrix(R, vacantL, beta, q)
+            vacantL[q] = R[beta].copy()
+            R    = TaqR.copy()
+            beta = None
+            q    = None
+
+        if fmin <= fo:
+            return fmin, R
+
+def gridLayout(Tmax, Tmin, Rmin, fmin, ne, rc, p):
     """
     Tmax: Temperature Tmax that define the initial temperature.
     Tmin: Temperature Tmin that define if the system is frozen.
@@ -208,34 +231,47 @@ def gridLayout(Tmax, Tmin, ne, rc, p):
     p   : Perturbation rate
     """
     T = Tmax
-    R = initLayout(nb_node)
+    R = Rinit
 
-    L = assignNodes(R)
-    adjacencyMatrix = initEdges(R, nb_edges)
-    M = quantityMatrixK(adjacencyMatrix,2)
-    w = weightMatrix(adjacencyMatrix)
+    L = areaUpdateL(R)
+    A = adjacencyMatrix(R, edges)
+    M = numberOfPathMatrix(A)
+    W = weightMatrix(R, M)
     
-    f    = localMin0(R, L, w)
+    print("initial R")
+    printR(R, A)
+    if CONFIG_PLOT_GRAPH:
+        draw_matrix(R, A, grid)
+
+    f, R    = localMin0(R, L, W)
+    L = areaUpdateL(R)
     fmin = f 
     Rmin = R
 
+
+    print("initial f", fmin)
+    
     while (T > Tmin):
 
-        if CONFIG_PLOT_GRAPH:
-            draw_matrix(R, adjacencyMatrix, grid)
-
         for i in range(0, ne):
-            Rn   = neighbor(R, L, p)
-            fn   = localMin0(Rn, L,  w)
-            print ("f,fn")
-            print (f,fn)
+            Rp   = neighbor(R, L, p)
+            fp, Rp   = localMin0(Rp, L,  W)
             epsilon = random.random()
-            if (epsilon < exp((f - fn)/T)):
-                f = fn
-                R = Rn
+            if (epsilon < exp((f - fp)/T)):
+                f = fp
+                R = Rp
                 if (f < fmin):
                     fmin = f
                     Rmin = R
-            L = assignNodes(R)
+            L = areaUpdateL(R)
         T = rc * T
+
+    print("\nfinal R")
+    printR(R, A)
+    print("final f", fmin)
+    
+    if CONFIG_PLOT_GRAPH:
+        draw_matrix(R, A, grid)
+
     return Rmin, fmin
+

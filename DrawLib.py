@@ -88,11 +88,11 @@ class GLPlotWidget(QGLWidget):
         # draw the grid XY
         self.drawGridXY()
         # draw edges
+
         for i in range(0, abs(self.config.x_max-self.config.x_min)):
             for j in range(0, abs(self.config.y_max-self.config.y_min)):
                 if self.edges[i][j] == 1:
                     self.drawEdge(self.nodes[i], self.nodes[j])
-                    print(self.nodes[i], self.nodes[j])
         
         # set yellow color for subsequent drawing rendering calls
         gl.glColor(1,1,0)
@@ -118,8 +118,6 @@ class GLPlotWidget(QGLWidget):
 class TestWindow(QtWidgets.QMainWindow):
     def __init__(self, nodes, edges, config):
         super(TestWindow, self).__init__()
-        print (nodes)
-        print (edges)
         # initialize the GL widget
         self.widget = GLPlotWidget()
         self.widget.setData(nodes, edges, config)

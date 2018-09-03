@@ -3,6 +3,25 @@ import random
 from math import exp
 import numpy as np
 
+# define condition var
+CONFIG_PLOT_GRAPH = False
+
+# import random
+if CONFIG_PLOT_GRAPH:
+    # import matplotlib.pyplot as plt
+    from DrawLib import *
+
+#################################################################
+# definitions of the grid
+#################################################################
+GRIDSIZE = 3
+
+# Max distance between nodes
+DMAX = 1
+
+# identity matrix
+identityMatrix = np.eye(GRIDSIZE)
+
 class Grid():
     def __init__(self):
         #  grid sizes
@@ -10,53 +29,38 @@ class Grid():
         self.x_max = 3
         self.y_min = 0
         self.y_max = 3
+
 # init grid config
 grid = Grid()
 
-# number of nodes and edges in the network
-nb_node  = 3
-nb_edges = 2
+# vectorOfCoordinates
+#   adjacencyMatrix
+#     numberOfPathMatrix
+#       weightMatrix
+#         distance
+#           costBetweenNodes
+#             costFunction
 
-# Max distance between nodes
-dmax     = 2 
+# init nodes and edges
+# 4 nodes: r1, r2, r3, r4 and 2 edges (r1, r3), (r3, r4)
+# Always numbering the edges with ordered nodes.
 
-# identity matrix
-identityMatrix = np.eye(grid.x_max)
+# ---------------> Y
+# | r0    r1
+# |   \        
+# |    \      r3
+# |     \    /
+# |      \  /
+# |       r2    
+# \/
+# X
+ 
+# r = [x, y]
+r0 = [0, 0]
+r1 = [0, 1]
+r2 = [2, 1]
+r3 = [1, 2]
 
-def initArea(x_min, x_max, y_min, y_max):
-    """
-    Initialise an area of size lenX by len Y
-    """
-    lenX = abs(x_max-x_min)
-    lenY = abs(y_max-y_min)
-    return np.zeros((lenY,lenX))
+Rinit = [r0, r1, r2, r3]
 
-def initLayout(nb_nodes):
-    """
-    Init the nodes table
-    """
-    Rn = []
-    for i in range(0, nb_nodes):
-        randX = random.randint(grid.x_min, grid.x_max-1)
-        randY = random.randint(grid.y_min, grid.y_max-1)
-        Rn.append([randX, randY])
-    return Rn
-
-def initEdges(R, nb_edges):
-    """
-    Create the adjacency matrix that connect nodes.
-    """
-    adjacencyMatrix = initArea(grid.x_min, grid.x_max, grid.y_min, grid.y_max)
-    for i in range(0, nb_edges):
-        rdEdge = R[random.randint(0, len(R)-1)]
-        adjacencyMatrix[rdEdge[0]][rdEdge[1]] = 1
-    return adjacencyMatrix
-
-def assignNodes(R):
-    """
-    Place the nodes on the map L
-    """
-    L = initArea(grid.x_min, grid.x_max, grid.y_min, grid.y_max)
-    for i in range(0,len(R)):
-        L[R[i][0]][R[i][1]] = 1
-    return L
+edges = [[0, 2], [2, 3]]

@@ -2,8 +2,6 @@
 # -*- coding: utf-8 -*-
 
 """
-DTB to graphviz
-
 The network is modeled as a 2D square grid.
 The network is confined within an area, L.
 
